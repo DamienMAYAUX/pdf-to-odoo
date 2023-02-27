@@ -34,9 +34,10 @@ Le format csv de référence
   - les cinq premières lignes peuvent être utilisées pour stocker des messages spécifiques à la commandes ("skip = 5")
   - la sixième ligne contient le nom des variables
   - le séparateur est le point virgule 
+  - les nombres décimaux sont ecrits avec un point au lieu d'une virgule
   - le contenu des variables textuelles ne doivent pas être entre guillemets (pas de "quote")
-  - voir l'exemple modele_csv_reference.csv
   - l'encodage des caractères doit être utf-8 et le retour à la ligne est \n (et non \r\n) 
+  - voir l'exemple modele_csv_reference.csv
 
 - contient obligatoirement les variables
   - "nom_produit_chez_fournisseur"
