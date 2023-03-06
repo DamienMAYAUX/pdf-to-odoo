@@ -43,11 +43,11 @@ Le format csv de référence
   - "nom_produit_chez_fournisseur"
   - "quantite_totale"
   - "quantite_par_unite_achat"
-  - "prix_achat_ttc_par_unite_achat"
+  - "prix_achat_ht_par_unite_achat"
   - "code_barre", si le produit a un code-barre
 
 - contient accessoirement d'autres variables de description des produits
-  - si elles sont disponibles, on pourra ajouter les variables suivantes (origine, label, taux_tva, prix_ht_par_unite_achat)
+  - si elles sont disponibles, on pourra ajouter les variables suivantes (origine, label, taux_tva, prix_ttc_par_unite_achat)
   - on peut éventuellement rajouter d'autres variables relatives aux produits, après avoir vérifié qu'elles n'ont pas d'équivalent dans la liste précédente et en choisissant un nom explicite, concis, en utilisant des _ au lieu des espaces.
   - ces variables ne contiennent que des informations qui sonts pas spécifiques à un ou plusieurs produits, pas des informations portant sur la commande en général 
 
