@@ -1,50 +1,105 @@
-#
-# This is a Shiny web application. You can run the application by clicking
-# the 'Run App' button above.
-#
-# Find out more about building applications with Shiny here:
-#
-#    http://shiny.rstudio.com/
-#
 
+packages <- c("tidyverse", "reticulate", "shiny")
+
+installed_packages <- packages %in% rownames(installed.packages())
+if (any(installed_packages == FALSE)) {
+  install.packages(packages[!installed_packages])
+}
+
+library(reticulate)
+library(tidyverse)
 library(shiny)
 
-# Define UI for application that draws a histogram
+# Liste des parseurs
+full_parser_list = list.files("Parsers")
+Python_parser_list = list.files("Parsers", pattern = ".*\\.py")
+R_parser_list = list.files("Parsers", pattern = ".*\\.R")
+
+# Liste des grossistes
+wholesaler_list = str_extract(full_parser_list, "(.*)_to_csv_(.*)_(.*)\\..*", group = 3)
+
+# Liste des parseurs disponibles pour chaque grossiste (liste de liste)
+format_type_list_per_wholesaler = wholesaler_list%>% 
+  lapply( function(wholesaler){grep(wholesaler, full_parser_list, value = TRUE)} )%>%
+  lapply( 
+    function(parser_list){
+      paste(
+        str_extract(parser_list, "(.*)_to_csv_(.*)_(.*)\\..*", group = 2),
+        str_extract(parser_list, "(.*)_to_csv_(.*)\\..*", group = 1)
+      )
+      } 
+    )
+
+
+# INTERFACE
 ui <- fluidPage(
 
-    # Application title
-    titlePanel("Old Faithful Geyser Data"),
+    # TITRE
+    titlePanel("Importation de commandes"),
 
-    # Sidebar with a slider input for number of bins 
     sidebarLayout(
+      
+        # PANNEAU LATERAL
         sidebarPanel(
-            sliderInput("bins",
-                        "Number of bins:",
-                        min = 1,
-                        max = 50,
-                        value = 30)
+          
+            # Selection du grossiste
+            selectInput(
+              "wholesaler",
+              "Grossiste",
+              choices = wholesaler_list,
+              selected = wholesaler_list,
+              multiple = TRUE
+            ),
+            
+            # Selection du type (BC, BL, F) et format (pdf, xls, xlsx) du document en entree 
+            uiOutput("type_and_format"),
+            
+            # Bouton de chargement du document
+            fileInput("wholesaler_file", "Document de commande", accept = ".pdf"),
+            
+            # Bouton d'execution du parser sur le document
+            actionButton("parsing_button", "Parser le document")
+            
         ),
 
-        # Show a plot of the generated distribution
+        # PANNEAU PRINCIPAL
         mainPanel(
-           plotOutput("distPlot")
+          
+          # Affichage du csv de reference produit par le parseur
+          tableOutput("table_reference_csv")
+           
         )
     )
 )
 
-# Define server logic required to draw a histogram
+# SERVEUR
 server <- function(input, output) {
 
-    output$distPlot <- renderPlot({
-        # generate bins based on input$bins from ui.R
-        x    <- faithful[, 2]
-        bins <- seq(min(x), max(x), length.out = input$bins + 1)
+  # Generation de l'interface de choix d'un type et format de document selon le grossiste choisi
+  output$type_and_format <- renderHTML({
 
-        # draw the histogram with the specified number of bins
-        hist(x, breaks = bins, col = 'darkgray', border = 'white',
-             xlab = 'Waiting time to next eruption (in mins)',
-             main = 'Histogram of waiting times')
-    })
+    
+    
+    selectInput(
+      "type_and_format",
+      "TYpe et format du document",
+      choices = wholesaler_list,
+      selected = wholesaler_list,
+      multiple = TRUE
+    )
+    
+    
+  })
+  
+  # Fichier csv de reference importe
+  
+  
+  
+  # Table
+  output$table_reference_csv <- renderTable(
+    read.table(input$wholesaler_file, sep = ";", skip = 5)
+  )
+  
 }
 
 # Run the application 
