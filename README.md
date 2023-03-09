@@ -25,7 +25,7 @@ Les scripts pour transformer les fichiers fournisseurs en csv au format de réf�
   
 - contiennent une fonction XX_to_csv_YY_ZZ qui 
   - prend en argument le nom d'un fichier au format XX
-  - renvoie un fichier YY_ZZ.csv au format csv de référence
+  - écrit un fichier YY_ZZ.csv au format csv de référence dans le répertoire de travail (pas nécessairement celui où se trouve le fichier)
 
 
 Le format csv de référence
