@@ -10,6 +10,8 @@ library(reticulate)
 library(tidyverse)
 library(shiny)
 
+## CHARGEMENT DES PARSERS
+
 # Liste des parseurs
 full_parser_list = list.files("Parsers")
 Python_parser_list = list.files("Parsers", pattern = ".*\\.py")
@@ -29,9 +31,29 @@ format_type_list_per_wholesaler = wholesaler_list%>%
       )
       } 
     )
+# Parseurs Python
+for (parser in R_parser_list){
+  # parser = R_parser_list[1]
+  tryCatch(
+    { source( paste0("Parsers/",parser) ) },
+    error = function(e) {print(paste("Erreur de chargement du script", parser))},
+    finally = {}
+  )
+}
+
+# Parseurs R
+for (parser in Python_parser_list){
+  # parser = python_parser_list[1]
+  tryCatch(
+    {source_python( paste0("Parsers/",parser) )},
+    error = function(e) {print(paste("Erreur de chargement du script", parser))},
+    finally = {}
+  )
+}
 
 
-# INTERFACE
+
+## INTERFACE
 ui <- fluidPage(
 
     # TITRE
@@ -47,18 +69,14 @@ ui <- fluidPage(
               "wholesaler",
               "Grossiste",
               choices = wholesaler_list,
-              selected = wholesaler_list,
-              multiple = TRUE
+              selected = wholesaler_list[1],
             ),
             
             # Selection du type (BC, BL, F) et format (pdf, xls, xlsx) du document en entree 
             uiOutput("type_and_format"),
             
             # Bouton de chargement du document
-            fileInput("wholesaler_file", "Document de commande", accept = ".pdf"),
-            
-            # Bouton d'execution du parser sur le document
-            actionButton("parsing_button", "Parser le document")
+            fileInput("wholesaler_file", "Document de commande", accept = ".pdf")
             
         ),
 
@@ -72,32 +90,38 @@ ui <- fluidPage(
     )
 )
 
-# SERVEUR
+## SERVEUR
 server <- function(input, output) {
 
   # Generation de l'interface de choix d'un type et format de document selon le grossiste choisi
-  output$type_and_format <- renderHTML({
-
-    
-    
-    selectInput(
+  output$type_and_format <- renderUI({
+    radioButtons(
       "type_and_format",
-      "TYpe et format du document",
-      choices = wholesaler_list,
-      selected = wholesaler_list,
-      multiple = TRUE
+      "Type et format du document",
+      choices = format_type_list_per_wholesaler[input$wholesaler == wholesaler_list],
+      selected = format_type_list_per_wholesaler[input$wholesaler == wholesaler_list][[1]]
     )
-    
-    
   })
   
   # Fichier csv de reference importe
-  
+  df_reference_csv <- reactive(
+    {
+      type = str_extract(input$type_and_format, "(.*) (.*)", group = 1)
+      format = str_extract(input$type_and_format, "(.*) (.*)", group = 2)
+      
+      parsing_function_name = paste0(format, "_to_csv_", type, "_", input$wholesaler)
+      parsing_function = get(parsing_function_name)
+      
+      csv_file_name = paste0(type, "_", input$wholesaler, ".csv")
+      parsing_function(gsub("/","\\\\",input$wholesaler_file$datapath))
+      
+      read.table(csv_file_name, sep = ";", skip = 5, header = TRUE)
+    })
   
   
   # Table
   output$table_reference_csv <- renderTable(
-    read.table(input$wholesaler_file, sep = ";", skip = 5)
+    df_reference_csv()
   )
   
 }
